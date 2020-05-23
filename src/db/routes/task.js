@@ -2,21 +2,20 @@ const express = require('express')
 const Task = require('../models/task')
 const authenticate = require('./middleware/authentication')
 const router = new express.Router()
-const {ObjectId} = require('mongodb')
 
 router.post('/tasks', authenticate, async (req, res) => {
-    const task  = new Task({...req.body, "owner":req.user._id})
-    try {        
+    const task = new Task({ ...req.body, "owner": req.user._id })
+    try {
         const savedTask = await task.save()
         res.status(201).send(savedTask)
-    } catch (error) {                
+    } catch (error) {
         res.status(400).send()
     }
 })
 
-router.get('/tasks', async (req, res) => {
+router.get('/tasks', authenticate, async (req, res) => {
     try {
-        const allTasks = await Task.find({})
+        const allTasks = await Task.find({ "owner": req.user._id })
         res.send(allTasks)
     } catch (error) {
         res.status(500).send()
@@ -24,10 +23,11 @@ router.get('/tasks', async (req, res) => {
 })
 
 
-router.get('/tasks/:id', async (req, res) => {
+router.get('/tasks/:id', authenticate, async (req, res) => {
     try {
-        const foundTask = await Task.findById(req.params.id)
-        if(foundTask)
+        const _id = req.params.id
+        const foundTask = await Task.findOne({ _id, "owner": req.user._id })
+        if (foundTask)
             res.send(foundTask)
         else
             res.status(404).send()
@@ -36,38 +36,46 @@ router.get('/tasks/:id', async (req, res) => {
     }
 })
 
-router.patch('/tasks/:id', async (req, res) => {
+router.patch('/tasks/:id', authenticate, async (req, res) => {
     const allowedKeys = ['description', 'completed']
     const updates = Object.keys(req.body)
     const validOperation = updates.every(item => allowedKeys.includes(item))
-    
-    if(!validOperation)
+
+    if (!validOperation)
         res.status(400).send({
             'message': 'Invalid updates',
             'allowedKeys': allowedKeys
         })
 
     try {
-        const operation = await Task.findByIdAndUpdate(req.params.id, req.body, {"new": true, runValidators: true})
-        if(!operation)
+        // const operation = await Task.findByIdAndUpdate(req.params.id, req.body, {"new": true, runValidators: true})
+        const owner = req.user._id
+        const _id = req.params.id
+        const targetTask = await Task.findOne({ _id, owner })
+        updates.forEach(x => {
+            targetTask[x] = req.body[x]
+        })
+        if (!targetTask)
             return res.status(404).send()
-            
-            
-        res.send(operation)
+        await targetTask.save()
+
+        res.send(targetTask)
     } catch (error) {
         console.log(error);
-        
+
         res.status(500).send(error)
     }
 })
 
-router.delete('/tasks/:id', async (req, res) => {
+router.delete('/tasks/:id', authenticate, async (req, res) => {
     try {
-        const operation = await Task.findByIdAndDelete(req.params.id)
-        if(operation)
-            res.send(operation)
-        else
+        const _id = req.params.id
+        const owner = req.user._id
+        const targetTask = await Task.findOne({ _id, owner })
+        if (!targetTask)
             res.status(404).send()
+        await targetTask.remove()
+        res.send(targetTask)
     } catch (error) {
         res.status(500).send()
     }
