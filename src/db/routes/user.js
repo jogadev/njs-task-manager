@@ -15,8 +15,11 @@ route.post('/users', async (req,res) => {
     }
 })
 
-route.get('/users/me', authenticate, (req, res) => {
-    res.send(req.user)
+route.get('/users/me', authenticate, async (req, res) => {
+    tasks = await req.user.populate('tasks').execPopulate()
+    const user = req.user.toJSON()
+    user.tasks = req.user.tasks    
+    res.send(user)
 })
 
 route.post('/users/logout', authenticate, async (req, res) => {

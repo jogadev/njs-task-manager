@@ -1,14 +1,15 @@
 const express = require('express')
 const Task = require('../models/task')
-
+const authenticate = require('./middleware/authentication')
 const router = new express.Router()
+const {ObjectId} = require('mongodb')
 
-router.post('/tasks', async (req, res) => {
-    const task  = new Task(req.body)
-    try {
+router.post('/tasks', authenticate, async (req, res) => {
+    const task  = new Task({...req.body, "owner":req.user._id})
+    try {        
         const savedTask = await task.save()
         res.status(201).send(savedTask)
-    } catch (error) {
+    } catch (error) {                
         res.status(400).send()
     }
 })
