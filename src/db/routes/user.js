@@ -78,7 +78,7 @@ route.get('/users/:id', async (req, res) => {
 })
 
 
-route.patch('/users/:id', async (req,res) => {
+route.patch('/users/me',authenticate ,async (req,res) => {
     const allowedKeys = ['name', 'age', 'email', 'password']
     const updates = Object.keys(req.body)
     const validOperation = updates.every(item => allowedKeys.includes(item))    
@@ -89,10 +89,7 @@ route.patch('/users/:id', async (req,res) => {
         })
 
     try {
-        const targetUser = await User.findById(req.params.id)
-        if(!targetUser){
-            return res.status(404).send()
-        }
+        const targetUser = req.user
         updates.forEach(updateKey => {targetUser[updateKey] = req.body[updateKey]})
         
         const operation = await targetUser.save()
