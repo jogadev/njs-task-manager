@@ -101,13 +101,11 @@ route.patch('/users/me',authenticate ,async (req,res) => {
             
 })
 
-route.delete('/users/:id', async (req, res) => {
+route.delete('/users/me',authenticate , async (req, res) => {
     try {
-        const operation = await User.findByIdAndDelete(req.params.id)
+        const operation = await req.user.remove()
         if(operation)
             res.send(operation)
-        else
-            res.status(404).send()
     } catch (error) {
         res.status(500).send(error)
     }
