@@ -13,9 +13,26 @@ router.post('/tasks', authenticate, async (req, res) => {
     }
 })
 
+// GET /tasks?completed=Bool
+//     /tasks?limit=X
+//     /tasks?skip=Y
+//     /tasks?sortBy=FIELD:(asc/desc)
 router.get('/tasks', authenticate, async (req, res) => {
+    const searchCriteria = {
+        "owner": req.user._id
+    }
+    const skip = parseInt(req.query.skip) || 0
+    const limit = parseInt(req.query.limit) || 0
+    const sorting = {}
+    if(req.query.sortBy){
+        const {sortBy} = req.query
+        const [field, direction] = sortBy.split(':')
+        sorting[field] = direction        
+    }
+    if (req.query.completed)
+        searchCriteria.completed = req.query.completed == 'true'
     try {
-        const allTasks = await Task.find({ "owner": req.user._id })
+        const allTasks = await Task.find(searchCriteria).skip(skip).limit(limit).sort(sorting)
         res.send(allTasks)
     } catch (error) {
         res.status(500).send()
