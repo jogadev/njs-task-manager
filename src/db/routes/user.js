@@ -1,8 +1,37 @@
 const express = require('express')
 const User = require('../models/user')
-
+const multer = require('multer')
 const route = new express.Router()
 const authenticate = require('./middleware/authentication')
+const fs = require('fs');
+const path = require('path')
+const sharp = require('sharp') 
+
+const upload = multer({
+    limits:{
+        fileSize: 3145728   // 3 MB 
+    },
+    fileFilter(req, file, cb){
+        if(!file.originalname.match(/\.(png|jpg|jpeg)$/)){
+            cb(new Error('Only png, jpg and jpeg are supported'));
+        }
+        
+        req.targetFile = "avatars/"+Math.random().toString(36).substr(2, 5) + Date.now() + '.' + file.originalname.split('.')[1]
+        cb(undefined, true)
+    }
+})
+
+async function saveFile(target, buffer){
+    fs.writeFile(target, buffer, err => {
+        if(err)
+            res = err;
+    });
+    
+}
+
+function errorHandler(error, req, res, next){
+    res.status(400).send({error: error.message})
+}
 
 route.post('/users', async (req,res) => {
     const user = new User(req.body)
@@ -113,5 +142,35 @@ route.delete('/users/me',authenticate , async (req, res) => {
         res.status(500).send(error)
     }
 })
+
+route.post('/users/me/avatar', authenticate, upload.single('avatar'), async (req, res) => {
+    try{
+        const image = sharp(req.file.buffer);
+        const newBuffer = await image.resize(350, 350, {
+            fit: "inside"
+        }).toBuffer()
+        await saveFile(req.targetFile, newBuffer)
+        req.user.avatar = newBuffer;
+        req.user.avatarPath = req.targetFile;
+        await req.user.save();
+    }catch(err){
+        res.status(500).send();
+    }
+    res.send('Avatar set ' + req.targetFile);
+}, errorHandler)
+
+
+route.get('/users/:id/avatar', async (req, res) => {
+    req.user = await User.findById(req.params.id);
+    if(!req.user.avatar){
+        //send placeholder
+        const placeholder = path.join(__dirname,"../../../assets/placeholder.jpg")
+        return res.sendFile(placeholder);
+    }
+    res.set('Content-Type', 'image/jpg');
+    res.send(req.user.avatar)
+    
+})
+
 
 module.exports = route

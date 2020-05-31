@@ -7,7 +7,6 @@ const mongoose = require('mongoose')
 
 const app = express()
 const port = process.env.PROT || 3000
-
 //Middleware
 
 // Ping mongoose, ensure it's available
@@ -18,7 +17,6 @@ app.use((req, res, next) => {
     }
     next()
 })
-
 
 
 app.use(express.json())
