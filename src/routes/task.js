@@ -1,5 +1,5 @@
 const express = require('express')
-const Task = require('../models/task')
+const Task = require('../db/models/task')
 const authenticate = require('./middleware/authentication')
 const router = new express.Router()
 

@@ -1,8 +1,8 @@
 const express = require('express')
 const jwt = require('jsonwebtoken')
 require('./db/mongoose')
-const userRoutes = require('./db/routes/user')
-const taskRoutes = require('./db/routes/task')
+const userRoutes = require('./routes/user')
+const taskRoutes = require('./routes/task')
 const mongoose = require('mongoose')
 
 const app = express()

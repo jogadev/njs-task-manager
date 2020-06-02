@@ -1,5 +1,5 @@
 const express = require('express')
-const User = require('../models/user')
+const User = require('../db/models/user')
 const multer = require('multer')
 const route = new express.Router()
 const authenticate = require('./middleware/authentication')
