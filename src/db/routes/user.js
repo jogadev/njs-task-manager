@@ -26,7 +26,6 @@ async function saveFile(target, buffer){
         if(err)
             res = err;
     });
-    
 }
 
 function errorHandler(error, req, res, next){
@@ -149,7 +148,6 @@ route.post('/users/me/avatar', authenticate, upload.single('avatar'), async (req
         const newBuffer = await image.resize(350, 350, {
             fit: "inside"
         }).toBuffer()
-        await saveFile(req.targetFile, newBuffer)
         req.user.avatar = newBuffer;
         req.user.avatarPath = req.targetFile;
         await req.user.save();
@@ -169,7 +167,12 @@ route.get('/users/:id/avatar', async (req, res) => {
     }
     res.set('Content-Type', 'image/jpg');
     res.send(req.user.avatar)
-    
+})
+
+route.delete('/users/me/avatar', authenticate, async (req, res) => {
+    req.user.avatar = null;
+    await req.user.save();
+    res.send()
 })
 
 
