@@ -6,7 +6,7 @@ const taskRoutes = require('./routes/task')
 const mongoose = require('mongoose')
 
 const app = express()
-const port = process.env.PROT || 3000
+const port = process.env.PORT
 //Middleware
 
 // Ping mongoose, ensure it's available

@@ -70,7 +70,7 @@ userSchema.pre('remove', async function(next){
 })
 
 userSchema.methods.generateToken = async function () {
-    const token = jwt.sign({ _id: this._id }, 'supersecret')
+    const token = jwt.sign({ _id: this._id }, process.env.JWT_SECRET)
     this.tokens = this.tokens.concat({ token })
     await this.save()
     return token
