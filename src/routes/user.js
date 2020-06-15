@@ -80,7 +80,6 @@ route.post('/users/login', async (req, res)=>{
         const token = await user.generateToken()
         res.send({user, token})
     } catch (error) {
-        console.log('ERROR=>', error);
         res.status(400).send()
     }
     
